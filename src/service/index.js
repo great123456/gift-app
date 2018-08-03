@@ -5,8 +5,8 @@ import { API_PATH } from '@/config/env'
 // 首页获取所有礼品卡展示
 export const allCardList = (ajaxParams) => wxRequest(API_PATH + '/lilejia/appCardController.do?getAllCard', ajaxParams, 'GET')
 
-//授权微信账户登录
-export const weixinLogin = (ajaxParams) => wxRequest(API_PATH + '/user/authWechatLogin.do', ajaxParams, 'POST')
+//获取礼品卡详情页
+export const apiGiftDetail = (ajaxParams) => wxRequest(API_PATH + '/lilejia/appCardController.do?getCardDetail', ajaxParams, 'GET')
 
 //根据楼宇动态获取首页布局信息
 export const indexInfo = (ajaxParams) => wxRequest(API_PATH + '/index.do', ajaxParams, 'POST')

@@ -3,12 +3,14 @@
  * API_PATH 接口URL
  * PRICE_RANGE 匹配价格区间
  */
-var API_PATH = 'http://120.25.89.85:8084'
+var API_PATH = 'http://giftcard.hm.liby.com.cn'
 
+var API_PATH2 = 'http://clubwxuat.hm.liby.com.cn'
 
 const isDEV = process.env.NODE_ENV === 'development'
 
 export {
   API_PATH,
+  API_PATH2,
   isDEV
 }

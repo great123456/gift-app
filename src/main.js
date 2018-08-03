@@ -14,7 +14,7 @@ export default {
     pages: [
       '^pages/index/main',
       'pages/gift-record/main',
-      'pages/logs/main',
+      'pages/details/main',
       'pages/receive-m/main',
       'pages/receive-ling/main',
       'pages/receive-m/main',

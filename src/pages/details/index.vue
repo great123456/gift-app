@@ -74,6 +74,7 @@
 
 <script>
 import wxShare from '@/mixins/wx-share'
+import { apiGiftDetail } from '@/service/index'
 export default {
   mixins: [wxShare],
   data () {
@@ -89,7 +90,7 @@ export default {
       giftId: '',  //礼品id
       detailInfo: {},  //礼品详情信息
       cardImgs: [],  //卡片
-      cardTexts:[], //祝福语
+      cardTexts:[]   //祝福语
     }
   },
   components: {
@@ -105,10 +106,22 @@ export default {
     
   },
   onShow(){
-    
+    this.giftId = this.$mp.query.id
+    this.getGiftDetail()
   },
   methods: {
-    
+    getGiftDetail(){
+      apiGiftDetail({
+        id: this.giftId
+      })
+      .then((res)=>{
+        if(res.code == '200'){
+
+        }else{
+
+        }
+      })
+    }
   }
 }
 </script>

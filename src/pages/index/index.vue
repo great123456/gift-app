@@ -15,8 +15,8 @@
     <view class='family'>
      <view class='familys'>给家人的温暖</view>
       <block v-for="(item,index) in listLabel" :key="index">
-        <view class='main'>
-          <image :src="item.pic" class="picB">
+        <view class='main' @click="detailPage(item.id)">
+          <image :src="item.cover" class="picB">
           </image>
           <view class="main_p">{{item.name}}</view>
         </view>
@@ -26,8 +26,8 @@
     <view class='family'>
      <view class='familys'>为朋友点赞</view>
       <block v-for="(item,index) in lists" :key="index">
-        <view class='main'>
-          <image :src="item.pic" class="picB">
+        <view class='main' @click="detailPage(item.id)">
+          <image :src="item.cover" class="picB">
           </image>
           <view class="main_p">{{item.name}}</view>
         </view>
@@ -36,14 +36,12 @@
 
     <view class='family'>
      <view class='familys'>致尊敬的前辈</view>
-     <block v-for="(item,index) in listser" :key="index">
-     <navigator url="/pages/logs/logs?id=item.id">
-      <view class='main'>
-        <image :src="item.pic" class="picB">
-        </image>
-        <view class="main_p">{{item.name}}</view>
-      </view>
-      </navigator>
+      <block v-for="(item,index) in listser" :key="index" @click="detailPage(item.id)">
+        <view class='main' @click="detailPage(item.id)">
+          <image :src="item.cover" class="picB">
+          </image>
+          <view class="main_p">{{item.name}}</view>
+        </view>
       </block>
     </view>
 
@@ -66,6 +64,7 @@
 <script>
 import wxShare from '@/mixins/wx-share'
 import { allCardList } from '@/service/index'
+import { apiIndexBanner } from '@/service/api'
 export default {
   mixins: [wxShare],
   data () {
@@ -79,10 +78,10 @@ export default {
       interval: 3000,
       duration: 1000,
       channel: 'scrabbleProgram',
-      appsecret: '03ee84c357544f0db35bfa742ac73ac0',
-      appid: 'wxd15ba91ad629ea69',
+      appsecret: 'bce38bd8c953ffd6f94c4a96b252accb',
+      appid: 'wx59e86e594123f552',
       advertisingChannel: 'TR',
-      projectUrl: 'http://bcd9d1c9.ngrok.io/lilejia/upload/cover/',
+      baseUrl: 'http://giftcard.hm.liby.com.cn/lilejia/upload/cover/',
       canIUse: wx.canIUse('button.open-type.getUserInfo'),
       labellist:[],
       labels:{},
@@ -102,7 +101,11 @@ export default {
     
   },
   onShow(){
+    wx.showLoading({
+      title: '加载中',
+    })
     this.getCardList()
+    this.getBannerList()
   },
   methods: {
     getUserInfo () {
@@ -136,12 +139,46 @@ export default {
       const self = this
       allCardList()
       .then((res)=>{
-        console.log('res', res.length)
-        res.forEach(function(item){
-          console.log('item', item)
-           // item.cover = 'http://120.25.89.85:8084/lilejia/upload/cover/' + item.cover
-        })
-        console.log('item', this.listser)
+        wx.hideLoading()
+        if(res.code == '200'){
+          let list = res.data
+          list.forEach(function(item){
+            item.cover = self.baseUrl + item.cover.split(',')[0]
+            if(item.cardtype == '01'){
+              self.listLabel.push(item)
+            }
+            if(item.cardtype == '02'){
+              self.lists.push(item)
+            }
+            if(item.cardtype == '03'){
+              self.listser.push(item)
+            }
+          })
+          console.log('list',this.listLabel)
+        }else{
+          wx.showToast({
+            title: res.msg,
+            icon: 'none',
+            duration: 2000
+          })
+        }
+      })
+    },
+    getBannerList(){
+      apiIndexBanner({
+        appid: 'wxd15ba91ad629ea69',
+        ts: new Date().getTime() + '',
+        channel: this.channel,
+        advertisingChannel: this.advertisingChannel
+      })
+      .then((res)=>{
+        console.log('banner',res)
+      })
+    },
+    detailPage(id){
+      console.log('id',id)
+      wx.navigateTo({
+        url: '/pages/details/main?id='+id
       })
     }
   }
