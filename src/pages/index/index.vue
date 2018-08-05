@@ -55,15 +55,14 @@
       <open-data type="userNickName"></open-data> -->
       <!-- 需要使用 button 来授权登录 -->
 
-   <!--  <button v-if="canIUse" open-type="getUserInfo" bindgetuserinfo="bindGetUserInfo">授权登录</button>
-    <view v-else>请升级微信版本</view> -->
+    <button open-type="getUserInfo" @getuserinfo="bindGetUserInfo">授权登录</button>
 
   </div>
 </template>
 
 <script>
 import wxShare from '@/mixins/wx-share'
-import { allCardList } from '@/service/index'
+import { allCardList,apiUserCodeLogin } from '@/service/index'
 import { apiIndexBanner } from '@/service/api'
 export default {
   mixins: [wxShare],
@@ -86,6 +85,7 @@ export default {
       labellist:[],
       labels:{},
       num: 0,
+      code: ''
     }
   },
   components: {
@@ -103,6 +103,13 @@ export default {
   onShow(){
     wx.showLoading({
       title: '加载中',
+    })
+    const self = this
+    wx.login({
+      success: function(res) {
+        console.log('login',res)
+        self.code = res.code
+      }
     })
     this.getCardList()
     this.getBannerList()
@@ -161,6 +168,22 @@ export default {
             icon: 'none',
             duration: 2000
           })
+        }
+      })
+    },
+    bindGetUserInfo(e){
+      this.getWeixinLogin(e.mp.detail.iv,e.mp.detail.encryptedData)
+    },
+    getWeixinLogin(iv,encryptedData){
+      apiUserCodeLogin({
+        encryptedData: encryptedData,
+        iv: iv,
+        code: this.code
+      })
+      .then((res)=>{
+        console.log('res',res)
+        if(res.code == '200'){
+
         }
       })
     },

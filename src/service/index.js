@@ -8,28 +8,6 @@ export const allCardList = (ajaxParams) => wxRequest(API_PATH + '/lilejia/appCar
 //获取礼品卡详情页
 export const apiGiftDetail = (ajaxParams) => wxRequest(API_PATH + '/lilejia/appCardController.do?getCardDetail', ajaxParams, 'GET')
 
-//根据楼宇动态获取首页布局信息
-export const indexInfo = (ajaxParams) => wxRequest(API_PATH + '/index.do', ajaxParams, 'POST')
-
-//用户手机号密码登录
-export const normalLogin = (ajaxParams) => wxRequest(API_PATH + '/user/normalLogin.do', ajaxParams, 'POST')
-
-//用户手机号密码登录
-export const UserPhoneLogin = (ajaxParams) => wxRequest(API_PATH + '/user/normalLogin.do', ajaxParams, 'POST')
-
-//发送验证码
-export const apiSendCode = (ajaxParams) => wxRequest(API_PATH + '/sms/sendVerify.do', ajaxParams, 'POST')
-
-//校验验证码
-export const apiVerifyCode = (ajaxParams) => wxRequest(API_PATH + '/sms/checkVerify.do', ajaxParams, 'POST')
-
-//手机短信验证码登录
-export const apiUserPhoneLogin = (ajaxParams) => wxRequest(API_PATH + '/user/fastLoginIncludeRegi.do', ajaxParams, 'POST')
-
-//授权微信小程序账户登录
-export const apiUserCodeLogin = (ajaxParams) => wxRequest(API_PATH + '/user/authMiniappLogin.do', ajaxParams, 'POST')
-
-//绑定微信小程序和登录
-export const apiUserBindCodeLogin = (ajaxParams) => wxRequest(API_PATH + '/user/bindWechatAndLogin.do', ajaxParams, 'POST')
-
+//授权登录
+export const apiUserCodeLogin = (ajaxParams) => wxRequest(API_PATH + '/liejia/WebService.do?decodeUserInfo', ajaxParams, 'GET')
 
