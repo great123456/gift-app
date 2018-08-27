@@ -4,7 +4,7 @@
     <view class='yihan'>
         <image src='/static/image/ling_shibai.png' class='cheng'></image>
         <view class='yihan_a'>真遗憾没有抢到~</view>
-        <button class='song' @click='hui9'>我也要送</button>
+        <button class='song' @click='indexPage'>我也要送</button>
     </view>
   </div>
 </template>
@@ -34,7 +34,11 @@ export default {
     
   },
   methods: {
-    
+    indexPage(){
+      wx.switchTab({
+        url: '/pages/index/main'
+      })
+    }
   }
 }
 </script>

@@ -3,7 +3,7 @@ export default {
     shareParams: {
       title: '送你一个礼品卡',
       path: '/pages/index/main',
-      imageUrl: '/static/image/share.png',
+      imageUrl: '/static/image/banner.png',
       success () {
         wx.showToast({
           title: '转发成功！',

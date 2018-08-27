@@ -21,7 +21,11 @@ export default {
       'pages/receive-s/main',
       'pages/receive-t/main',
       'pages/receive-yi/main',
-      'pages/success/main'                 
+      'pages/success/main',
+      'pages/contact/main',
+      'pages/login/main',
+      'pages/agreement/main',
+      'pages/attention/main'                 
     ],
     window: {
       backgroundTextStyle: 'light',
@@ -30,8 +34,8 @@ export default {
       navigationBarTextStyle: 'black'
     },
     tabBar: {
-      color: '#2c2d2f',
-      selectedColor: '#F8D347',
+      color: '#999999',
+      selectedColor: '#fda929',
       backgroundColor: '#ffffff',
       borderStyle: 'white',
       list: [{
@@ -44,11 +48,6 @@ export default {
         iconPath: '/static/image/bottom_b.png',
         selectedIconPath: '/static/image/bottom_b_hover.png',
         text: "礼物记录"
-      },{
-        pagePath: "pages/gift-record/main",
-        iconPath: '/static/image/bottom_c.png',
-        selectedIconPath: '/static/image/bottom_c_hover.png',
-        text: "联系客服"
       }]
     }
   }

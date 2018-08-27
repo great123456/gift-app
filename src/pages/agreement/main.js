@@ -6,7 +6,7 @@ app.$mount()
 
 export default {
   config: {
-    navigationBarTitleText: '填写收货地址',
+    navigationBarTitleText: '用户协议',
     navigationBarBackgroundColor: '#ffffff',
     navigationBarTextStyle: 'black',
     backgroundColor: '#ffffff'

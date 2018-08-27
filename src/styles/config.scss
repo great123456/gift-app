@@ -54,3 +54,6 @@ image {
 .button-hover {
   background-color: #F4C52F;
 }
+button::after{
+  border:none;
+}

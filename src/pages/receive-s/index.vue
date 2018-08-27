@@ -9,22 +9,24 @@
       </view>
 
       <view class='btn'>
-        <button class='qian'>
+        <button class='qian' @click="addressPage">
           <image src='/static/image/tk_wenhao_icon.png' class='wen'></image>
           前往使用
         </button>
-        <button class='song' @click='hui9'>我也要送</button>
+        <div class='song' @click='indexPage'>我也要送</div>
       </view>
   </div>
 </template>
 
 <script>
 import wxShare from '@/mixins/wx-share'
+import { apiCheckCode } from '@/service/index'
 export default {
   mixins: [wxShare],
   data () {
     return {
-      
+      orderId: '',
+      code: ''
     }
   },
   components: {
@@ -40,15 +42,44 @@ export default {
     
   },
   onShow(){
-    
+    this.orderId = this.$mp.query.orderId
+    this.checkUserCode()
   },
   methods: {
-    
+    indexPage(){
+      wx.switchTab({
+        url: '/pages/index/main'
+      })
+    },
+    checkUserCode(){
+      apiCheckCode({
+        unionId: wx.getStorageSync('unionid')
+      })
+      .then((res)=>{
+        console.log('user-code',res)
+        this.code = res.attstate
+      })
+    },
+    addressPage(){
+      if(this.code == '-10113'){
+        wx.navigateTo({
+          url: '/pages/receive-t/main?orderId='+this.orderId
+        })
+      }else{
+        wx.navigateTo({
+          url: '/pages/attention/main'
+        })
+      }
+    }
   }
 }
 </script>
 
 <style lang="scss" scoped>
+.container{
+  padding-top: 1px;
+  box-sizing: border-box;
+}
 .success{
   display: block;
   text-align: center;
@@ -85,12 +116,14 @@ export default {
 }
 .btn .song{
   color:#fda929;
-  background-color:white;
+  background-color:#ffffff;
   font-size:35rpx;
   border:1px solid #fda929;
   border-radius:50rpx;
   margin-top:50rpx;
-
+  height: 86rpx;
+  line-height: 86rpx;
+  text-align: center;
 }
 .cheng{
   display: inline-block;

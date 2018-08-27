@@ -1,29 +1,32 @@
 <!-- 首页 -->
 <template>
   <div class="container">
-    <swiper :indicator-dots="indicatorDots"
-    :autoplay="autoplay" :interval="interval" :duration="duration" indicator-active-color="#fd9827"indicator-color="#fae3e8" style="height: 220px;">
-      <block v-for="(item,index) in imgUrls" :key="index">
-        <navigator url="/pages/logs/main">
-        <swiper-item>
-          <image :src="item" class="slide-image"  />
-        </swiper-item>
-        </navigator>
-      </block>
-    </swiper>
+    <div class="swiper-content">
+      <swiper :indicator-dots="indicatorDots"
+      :autoplay="autoplay" :interval="interval" @change="currentChange" :circular="circular" :duration="duration" indicator-active-color="#fda929"indicator-color="#ffffff" style="height:440rpx;">
+        <block v-for="(item,index) in imgUrls" :key="index">
+          <swiper-item>
+            <image :src="item.fileURL" class="slide-image" @click="bannerDetail(item.outURL)" />
+          </swiper-item>
+        </block>
+      </swiper>
+      <div class="dot-list">
+        <div class="dot" v-for="(dot,dex) in imgUrls" :key="dex" :class="currentIndex == dex?'active':''"></div>
+      </div>
+    </div>
 
-    <view class='family'>
-     <view class='familys'>给家人的温暖</view>
-      <block v-for="(item,index) in listLabel" :key="index">
+    <view class='family' v-for="(label,dex) in listLabel" :key="dex">
+     <view class='familys'>{{label.label}}</view>
+      <block v-for="(item,index) in label.data" :key="index">
         <view class='main' @click="detailPage(item.id)">
           <image :src="item.cover" class="picB">
           </image>
-          <view class="main_p">{{item.name}}</view>
+          <view class="main_p">{{item.NAME}}</view>
         </view>
       </block>
     </view>
 
-    <view class='family'>
+    <!-- <view class='family'>
      <view class='familys'>为朋友点赞</view>
       <block v-for="(item,index) in lists" :key="index">
         <view class='main' @click="detailPage(item.id)">
@@ -43,11 +46,11 @@
           <view class="main_p">{{item.name}}</view>
         </view>
       </block>
-    </view>
+    </view> -->
 
 
     <view class='userProtocol'>
-      <button class='userProtocolBook' bindtap=''> <image src='/static/image/sy_yhxy.png' class='tan'></image> 用户协议</button>
+      <button class='userProtocolBook' @click="agreementPage"> <image src='/static/image/sy_yhxy.png' class='tan'></image> 用户协议</button>
     </view>
 
 
@@ -55,15 +58,14 @@
       <open-data type="userNickName"></open-data> -->
       <!-- 需要使用 button 来授权登录 -->
 
-    <button open-type="getUserInfo" @getuserinfo="bindGetUserInfo">授权登录</button>
+    <button open-type="getUserInfo" @getuserinfo="bindGetUserInfo" class="user-btn" v-show="showInfoBtn"></button>
 
   </div>
 </template>
 
 <script>
 import wxShare from '@/mixins/wx-share'
-import { allCardList,apiUserCodeLogin } from '@/service/index'
-import { apiIndexBanner } from '@/service/api'
+import { allCardList,apiUserCodeLogin,apiIndexBanner } from '@/service/index'
 export default {
   mixins: [wxShare],
   data () {
@@ -73,19 +75,22 @@ export default {
       lists: [],
       listser: [],
       autoplay: true,
-      indicatorDots: true,
+      circular: true,
+      indicatorDots: false,
+      currentIndex: 0,
       interval: 3000,
       duration: 1000,
       channel: 'scrabbleProgram',
       appsecret: 'bce38bd8c953ffd6f94c4a96b252accb',
       appid: 'wx59e86e594123f552',
       advertisingChannel: 'TR',
-      baseUrl: 'http://giftcard.hm.liby.com.cn/lilejia/upload/cover/',
+      baseUrl: 'https://giftcard.hm.liby.com.cn/lilejia/upload/cover/',
       canIUse: wx.canIUse('button.open-type.getUserInfo'),
       labellist:[],
       labels:{},
       num: 0,
-      code: ''
+      code: '',
+      showInfoBtn: false
     }
   },
   components: {
@@ -104,13 +109,10 @@ export default {
     wx.showLoading({
       title: '加载中',
     })
-    const self = this
-    wx.login({
-      success: function(res) {
-        console.log('login',res)
-        self.code = res.code
-      }
-    })
+    if(!wx.getStorageSync('userInfo')){
+      this.showInfoBtn = true
+    }
+    //this.getUserInfo()
     this.getCardList()
     this.getBannerList()
   },
@@ -119,49 +121,38 @@ export default {
       // 调用登录接口
       wx.login({
         success: (res) => {
-          // console.log('login',res)
-          weixinLogin({
-            accessCode: res.code
+          apiUserCodeLogin({
+            code: res.code
           })
           .then((res)=>{
-            // console.log('res',res)
+             console.log('login',res)
+             wx.setStorageSync('openid', res.openid)
+             wx.setStorageSync('session_key', res.session_key)
           })
-          // wx.getUserInfo({
-          //   success: (res) => {
-          //     console.log('res',res)
-          //     this.userInfo = res.userInfo
-          //     wx.setStorageSync('userInfo', res.userInfo)
-          //   },
-          //   fail: (err)=>{
-          //     console.log('err',err)
-          //   }
-          // })
         }
       })
     },
+    currentChange(e){
+      // console.log('current',e)
+      this.currentIndex = e.mp.detail.current
+    },
     getCardList(){
-      this.listLabel = []
-      this.lists = []
-      this.listser = []
+      // this.listLabel = []
+      // this.lists = []
+      // this.listser = []
       const self = this
       allCardList()
       .then((res)=>{
         wx.hideLoading()
         if(res.code == '200'){
-          let list = res.data
-          list.forEach(function(item){
-            item.cover = self.baseUrl + item.cover.split(',')[0]
-            if(item.cardtype == '01'){
-              self.listLabel.push(item)
+          let list = res.res
+          for(let i = 0;i<list.length;i++){
+            for(let j = 0;j<list[i].data.length;j++){
+              list[i].data[j].cover = this.baseUrl + list[i].data[j].cover.split(',')[0]
             }
-            if(item.cardtype == '02'){
-              self.lists.push(item)
-            }
-            if(item.cardtype == '03'){
-              self.listser.push(item)
-            }
-          })
-          console.log('list',this.listLabel)
+          }
+          console.log('list',list)
+          self.listLabel = list
         }else{
           wx.showToast({
             title: res.msg,
@@ -172,36 +163,42 @@ export default {
       })
     },
     bindGetUserInfo(e){
-      this.getWeixinLogin(e.mp.detail.iv,e.mp.detail.encryptedData)
-    },
-    getWeixinLogin(iv,encryptedData){
-      apiUserCodeLogin({
-        encryptedData: encryptedData,
-        iv: iv,
-        code: this.code
-      })
-      .then((res)=>{
-        console.log('res',res)
-        if(res.code == '200'){
-
-        }
-      })
+      wx.setStorageSync('userInfo', e.mp.detail.userInfo)
+      this.showInfoBtn = false
     },
     getBannerList(){
-      apiIndexBanner({
-        appid: 'wxd15ba91ad629ea69',
-        ts: new Date().getTime() + '',
-        channel: this.channel,
-        advertisingChannel: this.advertisingChannel
-      })
+      apiIndexBanner()
       .then((res)=>{
         console.log('banner',res)
+        this.imgUrls = res.data.advertisingInfo
       })
     },
-    detailPage(id){
+    bannerDetail(url){
+      console.log('url',url)
+      if(url == ''){
+        wx.showToast({
+          title: '无礼品卡ID',
+          icon: 'none',
+          duration: 2000
+        })
+        return
+      }
+      let id = url.split('=')[1]
       console.log('id',id)
+      this.detailPage(id)
+    },
+    detailPage(id){
+      // wx.navigateTo({
+      //   url: '/pages/receive-t/main'
+      // })
+      // return
       wx.navigateTo({
         url: '/pages/details/main?id='+id
+      })
+    },
+    agreementPage(){
+      wx.navigateTo({
+        url: '/pages/agreement/main'
       })
     }
   }
@@ -209,6 +206,31 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.swiper-content{
+  position: relative;
+}
+.dot-list{
+  position: absolute;
+  bottom: 26rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  div{
+    width: 25rpx;
+    height: 25rpx;
+    border-radius: 100%;
+    background: #ffffff;
+    margin-left: 10rpx;
+    margin-right: 10rpx;
+  }
+}
+.active{
+  width: 35rpx !important;
+  height: 22rpx !important;
+  border-radius: 20rpx !important;
+  background: #fda929 !important;
+}
 .slide-image{
   width: 100%;
   height: 100%;
@@ -245,7 +267,7 @@ export default {
 }
 .main_p{
   width:300rpx;
-  height:30rpx;
+  height:35rpx;
   font-size:26rpx;
   white-space:nowrap;
   overflow:hidden;
@@ -253,7 +275,10 @@ export default {
   text-align:center;
   background-color:white;
   box-sizing: border-box;
-  color: #eb6100;
+  color: #fd9c2f;
+  line-height: 35rpx;
+  position: relative;
+  top: 10rpx;
 }
 .userProtocol{
   text-align:center;
@@ -277,5 +302,15 @@ export default {
   height:30rpx;
   display:inline-block;
   margin-right: 10rpx;
+}
+.user-btn{
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  left: 0px;
+  top: 0px;
+  box-sizing: border-box;
+  z-index: 9999;
+  opacity: 0;
 }
 </style>

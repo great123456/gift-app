@@ -1,7 +1,21 @@
 <script>
+import { apiUserCodeLogin } from '@/service/index'
 export default {
   created () {
-    //console.log('app created')
+    wx.login({
+        success: (res) => {
+          console.log('login-code',res)
+          apiUserCodeLogin({
+            code: res.code
+          })
+          .then((res)=>{
+             console.log('login',res)
+             wx.setStorageSync('openid', res.openid)
+             wx.setStorageSync('session_key', res.session_key)
+             wx.setStorageSync('unionid', res.unionid)
+          })
+        }
+      })
   },
   onShow(){
   	

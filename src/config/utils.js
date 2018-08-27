@@ -37,4 +37,42 @@ export const getDateStr = (AddDayCount) => {
   return y + '-' + m + '-' + d
 }
 
+export const toCanvas = async(pageEl, pageE2, canvasWidth, canvasHeight) => {
+  const html2canvas = import('html2canvas')
+  console.log('html-canvas',pageEl)
+  //  获取想要转换的DOM节点
+  let box = pageEl
+  let outBox = pageE2
+  // DOM 节点计算后宽高
+  let width = box.getBoundingClientRect().width
+  let height = box.getBoundingClientRect().height
+  let scaleBy = 2   // 此处原为DPR()计算出的像素比，为了清晰改了2倍；
+  // 创建自定义 canvas 元素
+  let canvas = document.createElement('canvas')
+  // 可设定 canvas 元素属性宽高为 DOM 节点宽高 * 像素比或固定宽高
+  canvas.width = canvasWidth || width * scaleBy
+  canvas.height = canvasHeight || height * scaleBy
+  // 获取画笔
+  let context = canvas.getContext('2d')
+  // 将所有绘制内容放大像素比倍
+  context.scale(scaleBy, scaleBy)
+  // 将自定义 canvas 作为配置项传入，开始绘制
+
+  console.log('to-canvas',context)
+  return new Promise((resolve) => {
+    html2canvas(box).then(canvas => {
+      outBox.innerHTML = ''
+      let dataUrl = canvas.toDataURL('image/jpeg')
+      let newImg = document.createElement('img')
+      newImg.classList.add('full-img')
+      newImg.src = dataUrl
+      newImg.addEventListener('click', (e) => {
+        let event = e || window.event
+        event.preventDefault()
+      }, false)
+      outBox.appendChild(newImg)
+      resolve(dataUrl)
+    })
+  })
+}
 
