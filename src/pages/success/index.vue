@@ -1,9 +1,9 @@
 <!-- 立乐礼 -->
 <template>
   <div class="container">
-    <view class='head_text'>Fun享卡准备好了，送给ta吧</view>
+    <view class='head_text'>Fun享礼准备好了，送给ta吧</view>
     <view class='ka'>
-        <view class='head_text_a'>{{userName}} <text style='color: #fda929'>送出一份立乐礼包</text></view>
+        <view class='head_text_a'>{{userName}} <text style='color: #fda929'>送出一份Fun享礼</text></view>
         <image :src="img" class='ka_tu' mode="widthFix"></image>
             <text class='shici'>{{zhufu}}</text>
         <button open-type="share" class='fa'>点击直接送给好友</button>
@@ -16,7 +16,7 @@
         <image :src="userImg" class="avatar-img"></image>
         <div class="canvas-content">
           <p class="user-name">{{userName}}</p>
-          <p class="canvas-btn">送你一份立乐礼包</p>
+          <p class="canvas-btn">送你一份Fun享礼</p>
           <image src="/static/image/code.jpg" class="canvas-code"></image>
           <p class="canvas-hint">长按小程序码领取立乐礼包</p>
         </div>
@@ -35,6 +35,7 @@
 <script>
 import wxShare from '@/mixins/wx-share'
 import { apiCodeImage,apiSearchOrderDetail,apiUserBindNumber } from '@/service/index'
+import { API_PATH } from '@/config/env'
 export default {
   mixins: [wxShare],
   data () {
@@ -48,7 +49,8 @@ export default {
       showCanvasImage: false,
       orderId: '',
       orderObj: {},
-      canvasImage: ''
+      canvasImage: '',
+      codeUrl: '/static/image/code.jpg'
     }
   },
   components: {
@@ -66,6 +68,7 @@ export default {
   onShow(){
     this.showCanvas = false
     this.showCanvasImage = false
+    wx.removeStorageSync('record')
     this.orderId = this.$mp.query.orderId
     this.userImg = wx.getStorageSync('userInfo').avatarUrl
     this.userName = wx.getStorageSync('userInfo').nickName
@@ -86,17 +89,26 @@ export default {
           icon: 'success',
           duration: 2000
         })
+        setTimeout(function(){
+          wx.switchTab({
+            url: '/pages/index/main'
+          })
+        },3000)
       }
     }
   },
   methods: {
     getQrcode(){
       apiCodeImage({
-        page: '/pages/receive-ling/main?orderId='+ this.orderId,
-        scene: ''
+        page: 'pages/receive-ling/main',
+        scene: this.orderId
       })
       .then((res)=>{
-        console.log('qrcode',res)
+        let codeUrl = API_PATH+'/lilejia/erweima/' + res.data
+        if(res.data != ''){
+          this.codeUrl = codeUrl
+        } 
+        console.log('codeUrl',codeUrl)
       })
     },
     bindUserNumber(){
@@ -120,7 +132,12 @@ export default {
           console.log('order-detail',res)
           this.orderObj = res.data
           this.zhufu = res.data.bless
-          this.img = 'https://giftcard.hm.liby.com.cn/lilejia/upload/cover/' + res.data.giftsCoverImg
+          if(res.data.shareCover){
+            this.img = API_PATH+'/lilejia/upload/cover/' + encodeURIComponent(res.data.shareCover)
+          }else{
+            this.img = API_PATH+'/lilejia/upload/cover/' + encodeURIComponent(res.data.giftsCoverImg)
+          }
+          console.log('share-img',this.img)
         }
       })
     },
@@ -128,7 +145,7 @@ export default {
       wx.showLoading({
         title: '海报生成中',
       })
-      // this.showCanvas = true
+      this.showCanvas = true
       const ctx = wx.createCanvasContext('myCanvas')
       this.drawCanvasBac(ctx)
     },
@@ -164,24 +181,33 @@ export default {
     },
     drawGiftBac(ctx){
       let img = '/static/image/giftbac.png'
-      ctx.drawImage(img, 85, 220, 220, 39)
+      ctx.drawImage(img, 85, 220, 220, 36)
       ctx.setTextAlign('center')
       ctx.setFillStyle('#ffffff')
-      ctx.setFontSize(18)
-      ctx.fillText('送你1张Fun享卡', 187, 246)
+      ctx.setFontSize(17)
+      ctx.fillText('送你1份Fun享礼', 187, 244)
       this.drawCodeImg(ctx)
     },
     drawCodeImg(ctx){
-      let img = '/static/image/code.jpg'
-      ctx.drawImage(img, 105, 310, 165, 165)
-      let iconUrl = '/static/image/hb_jtou_icon.png'
-      ctx.drawImage(iconUrl, 177, 500, 20, 22)
-      ctx.setTextAlign('center')
-      ctx.setFillStyle('#2c2d2f')
-      ctx.setFontSize(16)
-      ctx.fillText('长按小程序码领取立乐礼包', 187, 550)
-      ctx.draw()
-      this.saveImage()
+      let img = this.codeUrl
+      const self = this
+      wx.downloadFile({
+        url: this.codeUrl,
+        success: function(res) {
+          console.log('res',res)
+          if (res.statusCode == 200) {
+            ctx.drawImage(res.tempFilePath, 93, 290, 190, 190)
+            let iconUrl = '/static/image/hb_jtou_icon.png'
+            ctx.drawImage(iconUrl, 177, 500, 20, 22)
+            ctx.setTextAlign('center')
+            ctx.setFillStyle('#2c2d2f')
+            ctx.setFontSize(16)
+            ctx.fillText('长按小程序码领取立乐礼包', 187, 550)
+            ctx.draw()
+            self.saveImage()
+          }
+        }
+      })
     },
     saveImage(){
       const self = this
@@ -196,7 +222,7 @@ export default {
         canvasId: 'myCanvas',
         success: function(res) {
           wx.hideLoading()
-          // self.showCanvas = false
+          self.showCanvas = false
           console.log('res',res.tempFilePath)
           self.canvasImage = res.tempFilePath
           self.showCanvasImage = true
@@ -277,10 +303,11 @@ export default {
   -webkit-box-orient:vertical;
   -webkit-line-clamp:3;
   overflow:hidden;
-
+  color: #666666;
+  font-size: 26rpx;
 }
 .fa{
-  background-color: #fba83b;
+  background-color: #fda929;
   color: #ffffff;
   font-size: 33rpx;
   border-radius: 50rpx;

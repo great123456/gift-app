@@ -25,7 +25,8 @@ export default {
       'pages/contact/main',
       'pages/login/main',
       'pages/agreement/main',
-      'pages/attention/main'                 
+      'pages/attention/main',
+      'pages/record-detail/main'                 
     ],
     window: {
       backgroundTextStyle: 'light',

@@ -1,5 +1,7 @@
 <script>
-import { apiUserCodeLogin } from '@/service/index'
+import { apiUserCodeLogin,apiGetShareConfig } from '@/service/index'
+import { API_PATH } from '@/config/env'
+
 export default {
   created () {
     wx.login({
@@ -15,7 +17,25 @@ export default {
              wx.setStorageSync('unionid', res.unionid)
           })
         }
-      })
+    })
+
+    apiGetShareConfig()
+    .then((res)=>{
+      console.log('share',res)
+      if(res.code == 200){
+        console.log('share-aaa')
+        let coverImg = API_PATH + '/lilejia/upload/cover/' + res.res.cover
+        let title = res.res.title
+        wx.setStorageSync('shareImg',coverImg)
+        wx.setStorageSync('shareTitle',title)
+      }else{
+        console.log('share-bbb')
+        let coverImg = '/static/image/banner.png'
+        let title = '送你一个礼品卡'
+        wx.setStorageSync('shareImg',coverImg)
+        wx.setStorageSync('shareTitle',title)
+      }
+    })
   },
   onShow(){
   	

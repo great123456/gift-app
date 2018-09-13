@@ -1,6 +1,6 @@
 <!-- 立乐礼 -->
 <template>
-  <div class="container">
+  <div class="container" v-if="getState<=2">
     <view class='mask'></view>
       <view class='modalDlg'>
         <view class='bg'>
@@ -12,7 +12,7 @@
         </view>
 
         <div v-show="getState == 0" style="width: 100%;padding:0rpx 50rpx;box-sizing: border-box;">
-          <view class='song'>送你一份立乐礼包，点击领取</view>
+          <view class='song'>送你一份Fun享礼，点击领取</view>
           <text class='shici'>{{orderObj.bless}}</text>
           <!-- <image src="/static/image/btn.png" class="ling" @click='getSuccessPage'></image> -->
           
@@ -24,8 +24,8 @@
           </form>
         </div>
         
-        <div v-show="getState!=0">
-          <view class='song'>Fun享卡已被ta领取</view>
+        <div v-show="getState == 1 || getState == 2">
+          <view class='song'>Fun享礼已被ta领取</view>
           <div class="user-content">
             <image :src="orderObj.getHeadImg" class="get-image"></image>
             <div class="get-userInfo">
@@ -56,7 +56,7 @@ export default {
       showUserInfo: false,
       showPhoneNumber: false,
       showReceiveBtn: false,
-      getState: 0,
+      getState: 3,
       formId: ''
     }
   },
@@ -73,8 +73,30 @@ export default {
     
   },
   onShow(){
+    wx.showLoading({
+      title: '加载中',
+    })
+    if(!wx.getStorageSync('userInfo')){
+      wx.authorize({
+        scope: 'scope.userInfo',
+        success() {
+          wx.getUserInfo({
+             success: function(res) {
+               console.log('userinfo',res.userInfo)
+               wx.setStorageSync('userInfo', res.userInfo)
+             }
+          })
+        }
+      })
+    }
     this.judgeUserStatus()
-    this.orderId = this.$mp.query.orderId
+    console.log('query',this.$mp.query)
+    if(this.$mp.query.orderId){
+      this.orderId = this.$mp.query.orderId
+    }
+    if(this.$mp.query.scene){
+      this.orderId = this.$mp.query.scene
+    }
     console.log('ling-orderId',this.orderId)
     this.getOrderDetail()
   },
@@ -186,7 +208,16 @@ export default {
       })
       .then((res)=>{
         if(res.code == 200){
+          wx.hideLoading()
           console.log('order-detail',res)
+          let userName = ''
+          if(wx.getStorageSync('userInfo').nickName){
+            userName = wx.getStorageSync('userInfo').nickName
+          }
+          if(res.data.getState ==1 && res.data.getNickName == userName){
+            this.getSuccessPage()
+            return
+          }
           this.orderObj = res.data
           this.getState = res.data.getState
         }

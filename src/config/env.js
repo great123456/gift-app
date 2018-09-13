@@ -3,7 +3,9 @@
  * API_PATH 接口URL
  * PRICE_RANGE 匹配价格区间
  */
-var API_PATH = 'https://giftcard.hm.liby.com.cn'
+var API_PATH = 'https://llg.innoapp.cn'
+
+//var API_PATH = 'https://giftcard.hm.liby.com.cn'
 
 var API_PATH2 = 'https://clubwxuat.hm.liby.com.cn'
 

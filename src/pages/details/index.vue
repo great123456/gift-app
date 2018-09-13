@@ -1,16 +1,16 @@
 <!-- 礼品详情 -->
 <template>
   <div class="container">
-    <view class='heads'>
+    <view class='heads heads-mark'>
         <image src='/static/image/xqy_kmian_icon.png' class='ka'></image>
         选择卡面
     </view>
     <view>
         <scroll-view class="scroll-view_H" scroll-x >
             <block v-for="(item,index) in cardImgs" :key="index">
-            <view @click="choseGift(index)" class="scroll-view-item_H" >
+            <view @click="choseGift(index)" class="scroll-view-item_H" :class="current == index ? 'active' : ''">
               <image v-if="current == index" src="/static/image/xqy_gou.png" class="gou"></image>
-              <image :src="imageUrl+item" class="tu" :class="current == index ? 'active' : ''"></image>
+              <image :src="imageUrl+item" class="tu"></image>
             </view>
             </block>
         </scroll-view>
@@ -25,14 +25,14 @@
     </view>
     
     <div class="text-box" v-show="showTextArea">
-      <textarea placeholder="设置祝福语" v-model="presetGreet"></textarea>
+      <textarea placeholder="设置祝福语" maxlength="35" v-model="presetGreet" @input="bindInputChange" style="height: 230rpx"></textarea>
     </div>
 
     <!-- <textarea placeholder="默认显示第一条预置的祝福语" v-model="detailObj.presetGreet" class='zhufu'></textarea> -->
 
     <view class='heads heads-mark' style='margin-bottom:30rpx;'>
         <image src='/static/image/xqy_xqing_icon.png' class='ka'></image>
-        礼品卡说明
+        详情
     </view>
     <view class='xq' v-for="(item,index) in detailsList" :key="index">
         <image :src="item" mode="widthFix"></image>
@@ -76,7 +76,7 @@
     
     <div class="contact">
       <image src='/static/image/xqy_kefu_btn.png' class='kf'></image>
-      <button open-type="contact" class="contact-btn"></button>
+      <button open-type="contact" class="contact-btn" :session-from="sessionForm"></button>
     </div>
     <!-- <div class="detail-bottom">
       <div class="price">￥{{detailObj.linePrice}}</div>
@@ -88,6 +88,7 @@
 <script>
 import wxShare from '@/mixins/wx-share'
 import { apiGiftDetail,apiUserWeixinPay,apiSearchUserInfo,apiSynOrderResult } from '@/service/index'
+import { API_PATH } from '@/config/env'
 export default {
   mixins: [wxShare],
   data () {
@@ -112,7 +113,10 @@ export default {
       coverList: [],
       coverUrl: '',
       detailsList: [],
-      presetGreet: ''
+      presetGreet: '',
+      userInfoName: '',
+      userInfoAvatar: '',
+      sessionForm: ''
     }
   },
   components: {
@@ -133,12 +137,40 @@ export default {
     })
     this.showModal = false
     this.showTextArea = true
+    wx.removeStorageSync('record')
     if(!wx.getStorageSync('phone')){
       this.showPhoneBtn = true
     }
     this.giftId = this.$mp.query.id
     this.getGiftDetail()
     this.current = 0
+    this.userInfoName = wx.getStorageSync('userInfo').nickName
+    this.userInfoAvatar = wx.getStorageSync('userInfo').avatarUrl
+    var note_info = {
+        "title": "业务记录标题",
+        "custom_fields": {
+            "TextField_1": "普通文本内容",
+        }
+    }
+    let note_info_str = JSON.stringify(note_info)
+    var customer_info = {
+        "email": "test@udesk.cn", //邮箱
+        "ip": "192.168.1.1", //IP
+        "description": "描述",
+        "organization_id": 1, //所属公司ID
+        "tags": "标签1,标签2", //标签 已英文号分割
+        "owner_id": 1, //客户负责人ID
+        "owner_group_id": 1, //客户负责组ID
+        "level": "normal", // 等级
+        "cellphones": [["", "13100000002"]], //数组 [[电话ID, 电话文本]]
+        "other_emails": [["", "13100000002@udesk.cn"]], //数组 [[邮箱ID, 邮箱]]
+        "custom_fields": {
+            "TextField_1": "普通文本内容",
+        }
+    }
+    let customer_info_str = JSON.stringify(customer_info)
+    this.sessionForm = "udesk|"+ this.userInfoName +"|"+this.userInfoAvatar +"|customer^"+customer_info_str+"|note^"+note_info_str
+    console.log('session-form',this.sessionForm)
   },
   methods: {
     getGiftDetail(){
@@ -158,14 +190,23 @@ export default {
           this.presetGreet = presetGreet[0]
           if(this.detailsList.length){
             for(let i = 0;i<this.detailsList.length;i++){
-              this.detailsList[i] = 'https://giftcard.hm.liby.com.cn/lilejia/upload/cover/' + this.detailsList[i]
+              this.detailsList[i] = API_PATH+'/lilejia/upload/cover/' + this.detailsList[i]
             }
           }
           for(let i = 0;i<this.cardImgs.length;i++){
-            this.cardImgs[i] = 'https://giftcard.hm.liby.com.cn/lilejia/upload/cover/' + this.cardImgs[i]
+            this.cardImgs[i] = API_PATH+'/lilejia/upload/cover/' + this.cardImgs[i]
           }
         }
       })
+    },
+    bindInputChange(e){
+      if(e.mp.detail.value.length>=35){
+        wx.showToast({
+           title: '祝福语过长',
+           icon: 'none',
+           duration: 2000
+         })
+      }
     },
     foo(str){
       var temp = str.split(/[\n,]/g);
@@ -228,7 +269,7 @@ export default {
          })
          return
        }
-       if(this.presetGreet.length>=35){
+       if(this.presetGreet.length>35){
          wx.showToast({
            title: '祝福语过长',
            icon: 'none',
@@ -295,7 +336,7 @@ export default {
          })
          return
        }
-       if(this.presetGreet.length>=35){
+       if(this.presetGreet.length>35){
          wx.showToast({
            title: '祝福语过长',
            icon: 'none',
@@ -353,7 +394,7 @@ export default {
 }
 .heads{
   font-size:30rpx;
-  padding:30rpx 50rpx 0 50rpx;
+  padding:50rpx 50rpx 0 50rpx;
   display:flex;
   align-items:center;
   justify-content: space-between;
@@ -363,9 +404,20 @@ export default {
   justify-content: flex-start;
 }
 .active {
-  border: 8rpx solid #fd9a32;
-  /* border-radius:44rpx; */
+  background: -webkit-linear-gradient(right top,#fda929, #fe6951);
+  background: linear-gradient(to bottom left, #fda929 , #fe6951); /* 标准的语法 */
 }
+/* .active::after {                 
+  position: absolute;               
+  content: '';
+  background: linear-gradient(#fda929, #fe6951);    
+  bottom: -10rpx; 
+  right: -10rpx;
+  left: -10rpx;
+  top: -10rpx;                              
+  z-index: -1;             
+  border-radius: 30rpx;                
+} */
 .scroll-view_H{
   width: 100%;
   white-space: nowrap;
@@ -374,26 +426,32 @@ export default {
   align-items: flex-end;
 }
 .scroll-view-item_H{
-  margin-top: 20rpx;
-  /* height:335rpx; */
+  margin-top: 30rpx;
+  height:336rpx;
+  width: 496rpx;
   display:inline-block;
   margin-left:48rpx;
   position: relative;
+  border-radius: 32rpx;
 }
 .gou{
   display:inline-block;
   position:absolute;
-  right:-25rpx;
+  right:-18rpx;
   width:50rpx;
   height:50rpx;
-  top:-25rpx;
-  z-index:1;
+  top:-18rpx;
+  z-index:2;
 }
 .tu{
-  border-radius:30rpx;
-  width:550rpx;
-  height:335rpx;
+  border-radius:26rpx;
+  width:480rpx;
+  height:320rpx;
   display: inline-block;
+  position: absolute;
+  left: 8rpx;
+  top: 8rpx;
+  z-index: 1;
 }
 .service_selection .is_checked{
   border:2px solid;
@@ -420,12 +478,12 @@ export default {
 }
 .bang{
   display:flex;
-  font-size:27rpx;
+  font-size:26rpx;
   height:50rpx;
   border-radius:35rpx;
   color:#fda929;
   border:1px solid #fda929;
-  width:180rpx;
+  width:160rpx;
   align-items: center;
   margin-left: 20rpx;
   padding-left: 20rpx;
@@ -446,7 +504,7 @@ export default {
 }
 .jiage{
     background-color: white;
-    height: 150rpx;
+    height: 139rpx;
     position: fixed;
     bottom: 0;
     z-index: 999;
@@ -456,7 +514,7 @@ export default {
 .jiage_a{
   display: inline-block;
   position: absolute;
-  top:75rpx;
+  top:70rpx;
   left:50rpx;
 
 }
@@ -467,25 +525,26 @@ export default {
   border-radius: 35rpx;
   font-size:23rpx;
   font-weight:bold;
-  padding:5rpx;
+  padding:3rpx 5rpx;
   width:80rpx;
   text-align:center;
   position: absolute;
-  top:20rpx;
+  top:30rpx;
   left:50rpx;
 
 }
 .dous{
-  color:#fda929;
-  font-size:50rpx;
+  color:#f1ad49;
+  font-size:43rpx;
 
 }
 .dou{
   text-decoration:line-through;
   margin-left:20rpx;
-  font-size:22rpx;
+  font-size:24rpx;
   color: #999999;
-
+  position: relative;
+  top: -2rpx;
 }
 .szj{
   display: inline-block;
@@ -495,8 +554,8 @@ export default {
   font-size:35rpx;
   box-sizing: border-box;
   width:200rpx;
-  height:100rpx;
-  line-height:100rpx;
+  height:95rpx;
+  line-height:90rpx;
   text-align: center;
   border-radius: 12rpx;
 }
@@ -506,8 +565,8 @@ export default {
   background-color: #fda929;
   font-size:35rpx;
   width:200rpx;
-  height:101rpx;
-  line-height:101rpx;
+  height:95rpx;
+  line-height:95rpx;
 
 }
 .mask{
@@ -659,7 +718,7 @@ export default {
   box-sizing: border-box;
   textarea{
     width: 100%;
-    min-height: 160rpx;
+    min-height: 130rpx;
     background: #ffffff;
     border-radius: 20rpx;
     padding: 20rpx 30rpx;

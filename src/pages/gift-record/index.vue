@@ -2,18 +2,12 @@
 <template>
   <div class="container">
     <view class='list_header'>
-        <view class="list_title" :class="activeIndex == 0?'default':'selsect'" @click="tabClick(0)" >
-            <view style='color:#666666'>{{dc}}</view>
-              <view class='list_border' style="background-color:#fda929;" v-show='activeIndex == 0'><view>{{dc}}</view></view>
-            </view>
-            <view class="list_title" :class="activeIndex == 1?'default':'selsect'" @click="tabClick(1)">
-              <view style='color:#666666'>{{wm}}</view>
-              <view class='list_border' style="background-color:#fda929;" v-show='activeIndex == 1'><view>{{wm}}</view></view>
-            </view>
+        <view class="list_title" :class="activeIndex == 0?'selsect':''" @click="tabClick(0)" >我送出的</view>
+        <view class="list_title" :class="activeIndex == 1?'selsect':''" @click="tabClick(1)" >我收到的</view>
     </view>
 
     <!-- 我收到的 -->
-      <view v-show="activeIndex == 1" style='margin-top:100rpx;'>
+      <view v-show="activeIndex == 1">
 
           <block v-for="(item,index) in lister" :key="index">
           <view class="list" @click="detailPage(item.cardId)">
@@ -46,8 +40,8 @@
                     </view>
                   </view>
                   <view class='ls'>
-                    <text>收货地址</text>
-                    <text>{{item.area}}{{item.address}}</text>
+                    <p class="ls-title">收货地址</p>
+                    <p>{{item.area}}{{item.address}}</p>
                     <!-- <p></p> -->
                   </view>
                   <!-- <view class='lu'>
@@ -69,7 +63,7 @@
 
       <!-- 我送出的 -->
 
-        <view v-show="activeIndex == 0" style='margin-top:100rpx;'>
+        <view v-show="activeIndex == 0">
         <block v-for="(item,index) in list" :key="index">
           <view class="list" @click="successPage(item)">
             <view class="list_imgbk2">
@@ -120,6 +114,7 @@
 <script>
 import wxShare from '@/mixins/wx-share'
 import { apiGiftRecordList,apiCheckCode } from '@/service/index'
+import { API_PATH } from '@/config/env'
 export default {
   mixins: [wxShare],
   data () {
@@ -151,13 +146,22 @@ export default {
     
   },
   onShow(){
-    this.getGiftList(0)
+    console.log('record',wx.getStorageSync('record'))
+    if(wx.getStorageSync('record')){
+      this.activeIndex = 1
+      this.getGiftList(1)
+    }else{
+      this.activeIndex = 0
+      this.getGiftList(0)
+    }
     this.checkUserCode()
   },
   methods: {
     tabClick(num) {
+      console.log('num',num)
       this.activeIndex = num
       this.getGiftList(num)
+      console.log('activeIndex',this.activeIndex)
     },
     addressPage(item){
       if(item.orderStatus == '99'){
@@ -194,10 +198,12 @@ export default {
         })
       }else{
         wx.navigateTo({
-          url: '/pages/details/main?id='+item.cardId
+          url: '/pages/record-detail/main?id='+item.cardId+'&orderId='+item.orderId
         })
+        // wx.navigateTo({
+        //   url: '/pages/details/main?id='+item.cardId
+        // })
       }
-      
     },
     detailPage(id){
       wx.navigateTo({
@@ -213,7 +219,7 @@ export default {
         if(res.code == 200){
           console.log('res',res)
           for(let i = 0;i<res.data.length;i++){
-            res.data[i].giftsCoverImg = this.baseUrl + res.data[i].giftsCoverImg
+            res.data[i].giftsCoverImg = API_PATH+'/lilejia/upload/cover/' + res.data[i].giftsCoverImg
           }
           if(num == 0){
             this.list = res.data
@@ -228,52 +234,60 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.container{
+  background: #f9f9f9;
+  padding-top: 120rpx;
+}
 .list_header{
   display: flex;
+  justify-content: center;
   font-size: 32rpx;
-  height: 80rpx;
-  background-color: white;
-  line-height: 80rpx;
+  height: 100rpx;
+  background-color: #ffffff;
+  line-height: 100rpx;
   position: fixed;
   width: 100%;
   z-index: 9999;
-  top:0;
-
+  top:0px;
+  left: 0px;
+  color: #666666;
+  box-sizing: border-box;
+  /* border-top:1px solid #efefef; */
 }
 .list_title{
   width: 50%;
   text-align: center;
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-  border-top:1px solid #efefef;
+  background: #ffffff;
 }
-
-.list_border{
+.selsect{
+  color: #ffffff;
+  background: #fda929;
+}
+/* .list_border{
   width: 100%;
   height: 100%;
-  margin-top: -81rpx;
+  margin-top: -100rpx;
   color: white;
   
-}
+} */
 .list{
   display: flex;
   justify-content: center;
 }
 .list_imgbk2{
   background-color: white;
-  box-shadow: 0px 0px 10px rgba(0,0,0,0.2);
-  border-radius: 25rpx;
+  box-shadow: 0px 0px 10rpx rgba(0,0,0,0.16);
+  border-radius: 15rpx;
   width: 600rpx;
   padding:30rpx 30rpx;
   padding-bottom: 6rpx;
-  margin:20rpx 0;
+  margin:16rpx 0;
   display: inline-block;
 }
 .li_tu{
-  border-radius: 25rpx;
+  border-radius: 22rpx;
   width:44%;
-  height: 170rpx;
+  height: 177rpx;
   float: left;
 
 }
@@ -284,8 +298,6 @@ export default {
   height:150rpx;
   margin-left:30rpx;
   padding-top:20rpx;
-
-
 }
 .list_biao .list_biao_haed{
   font-size:32rpx;
@@ -301,10 +313,11 @@ export default {
 }
 .ling{
   color: #999999 !important;
+  font-size: 26rpx !important;
 }
 .ding{
   font-size:26rpx;
-  margin-top: 20rpx;
+  margin-top: 26rpx;
   color: #666666;
 }
 .time{
@@ -319,6 +332,7 @@ export default {
 }
 .ling_a{
   color: #fda929 !important;
+  font-size: 26rpx !important;
 }
 .lq{
   border-top: 1px solid #dcdcdc;
@@ -337,9 +351,12 @@ export default {
   color: #666666;
   font-size:26rpx;
   margin-top: 15rpx;
-  display: inline-flex;
+  display: flex;
   justify-content: space-between;
   width: 100%;
+}
+.ls-title{
+  min-width: 130rpx;
 }
 .shou{
   display: inline-flex;
@@ -347,8 +364,8 @@ export default {
   justify-content: center;
   border-radius: 50rpx;
   font-size: 30rpx;
-  width: 385rpx;
-  height: 89rpx;
+  width: 350rpx;
+  height: 80rpx;
   border: 1px solid #fda929;
   color: #fda929;
   background-color: white;

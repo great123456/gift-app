@@ -1,9 +1,9 @@
 export default {
   data: {
     shareParams: {
-      title: '送你一个礼品卡',
+      title: wx.getStorageSync('shareTitle'),
       path: '/pages/index/main',
-      imageUrl: '/static/image/banner.png',
+      imageUrl: wx.getStorageSync('shareImg'),
       success () {
         wx.showToast({
           title: '转发成功！',

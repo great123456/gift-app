@@ -50,3 +50,6 @@ export const apiCheckCode = (ajaxParams) => wxRequest(API_PATH + '/lilejia/WebSe
 // 获取CRM地区数据
 export const apiGetCRMList = (ajaxParams) => wxRequest(API_PATH + '/lilejia/WebService.do?getAreaInfo', ajaxParams, 'GET')
 
+//获取分享文案配置
+export const apiGetShareConfig = (ajaxParams) => wxRequest(API_PATH + '/lilejia/appShareConfigController.do?query', ajaxParams, 'GET')
+

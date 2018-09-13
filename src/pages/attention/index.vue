@@ -34,7 +34,7 @@ export default {
     
   },
   onShow(){
-    
+    wx.removeStorageSync('record')
   },
   methods: {
     
@@ -74,6 +74,9 @@ export default {
   position: absolute;
   left: 0px;
   top: 0px;
+  padding-left: 10rpx;
+  padding-right: 10rpx;
+  box-sizing: border-box;
   image{
     width: 100%;
   }

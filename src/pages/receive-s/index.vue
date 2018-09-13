@@ -11,7 +11,7 @@
       <view class='btn'>
         <button class='qian' @click="addressPage">
           <image src='/static/image/tk_wenhao_icon.png' class='wen'></image>
-          前往使用
+          <span class="btn-text">前往使用</span>
         </button>
         <div class='song' @click='indexPage'>我也要送</div>
       </view>
@@ -42,6 +42,7 @@ export default {
     
   },
   onShow(){
+    this.code = ''
     this.orderId = this.$mp.query.orderId
     this.checkUserCode()
   },
@@ -109,7 +110,7 @@ export default {
   color:white;
   font-size:35rpx;
   border-radius:50rpx;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   width: 100%;
   justify-content: center;
@@ -134,5 +135,9 @@ export default {
   display: inline-block;
   width:35rpx;
   height:35rpx;
+  margin-right: 10rpx;
+}
+.btn-text{
+  margin-left: 10rpx;
 }
 </style>

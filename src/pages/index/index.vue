@@ -50,7 +50,7 @@
 
 
     <view class='userProtocol'>
-      <button class='userProtocolBook' @click="agreementPage"> <image src='/static/image/sy_yhxy.png' class='tan'></image> 用户协议</button>
+      <button class='userProtocolBook' @click="agreementPage"> <image src='/static/image/sy_yhxy.png' class='tan'></image> 使用须知</button>
     </view>
 
 
@@ -66,6 +66,7 @@
 <script>
 import wxShare from '@/mixins/wx-share'
 import { allCardList,apiUserCodeLogin,apiIndexBanner } from '@/service/index'
+import { API_PATH } from '@/config/env'
 export default {
   mixins: [wxShare],
   data () {
@@ -109,6 +110,22 @@ export default {
     wx.showLoading({
       title: '加载中',
     })
+    const self = this
+    if(!wx.getStorageSync('userInfo')){
+      wx.authorize({
+        scope: 'scope.userInfo',
+        success() {
+          wx.getUserInfo({
+             success: function(res) {
+               console.log('userinfo',res.userInfo)
+               wx.setStorageSync('userInfo', res.userInfo)
+               self.showInfoBtn = false
+             }
+          })
+        }
+      })
+    }
+    wx.removeStorageSync('record')
     if(!wx.getStorageSync('userInfo')){
       this.showInfoBtn = true
     }
@@ -148,7 +165,7 @@ export default {
           let list = res.res
           for(let i = 0;i<list.length;i++){
             for(let j = 0;j<list[i].data.length;j++){
-              list[i].data[j].cover = this.baseUrl + list[i].data[j].cover.split(',')[0]
+              list[i].data[j].cover = API_PATH+'/lilejia/upload/cover/' + list[i].data[j].cover.split(',')[0]
             }
           }
           console.log('list',list)
@@ -176,11 +193,11 @@ export default {
     bannerDetail(url){
       console.log('url',url)
       if(url == ''){
-        wx.showToast({
-          title: '无礼品卡ID',
-          icon: 'none',
-          duration: 2000
-        })
+        // wx.showToast({
+        //   title: '无礼品卡ID',
+        //   icon: 'none',
+        //   duration: 2000
+        // })
         return
       }
       let id = url.split('=')[1]
@@ -217,8 +234,8 @@ export default {
   display: flex;
   justify-content: center;
   div{
-    width: 25rpx;
-    height: 25rpx;
+    width: 16rpx;
+    height: 16rpx;
     border-radius: 100%;
     background: #ffffff;
     margin-left: 10rpx;
@@ -226,9 +243,9 @@ export default {
   }
 }
 .active{
-  width: 35rpx !important;
-  height: 22rpx !important;
-  border-radius: 20rpx !important;
+  width: 22rpx !important;
+  height: 16rpx !important;
+  border-radius: 16rpx !important;
   background: #fda929 !important;
 }
 .slide-image{
@@ -256,7 +273,7 @@ export default {
   background-color:white;
   border-radius:20rpx;
   box-shadow:0px 0px 8rpx rgba(0,0,0,0.1);
-  margin-top:35rpx;
+  margin-top:20rpx;
 
 }
 .picB{
