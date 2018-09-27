@@ -1,33 +1,39 @@
 <!-- 收货地址 -->
 <template>
   <div class="container">
-    <view class='fen' style='margin-top: 50rpx;'>
-        <text class='fen_a'>收货人：</text>
-        <input type="text" class='fen_b' @input="getInputValue"></input>
-    </view>
-    <view class='fen'>
-        <text class='fen_a'>手机号码：</text>
+
+    <div class="fen" style="margin-top: 50rpx;">
+        <span class="fen_a">收货人：</span>
+        <input type="text" class="fen_b" @input="getInputValue"></input>
+    </div>
+
+    <div class="fen">
+        <span class="fen_a">手机号码：</span>
         <!-- <input type="number" confirm-type="done" class='fen_b' style='width:63%;' 
         @input="getPhoneNumber"></input> -->
-        <input type="number" class='fen_b' style='width:63%;' 
-        @input="getPhoneNumber"></input>
-        <image src='/static/image/cha.png' class='cha' @click="clearInput"></image>
-    </view>
-    <view class='fen'>
+        <input type="text"  class="fen_b" v-model="userNumber" style="position: relative;top: 10rpx;">
+        <image src='/static/image/cha.png' class='cha' @click.stop="clearInput" v-if="userNumber.length>0"></image>
+    </div>
+
+    <view class='region'>
         <text class='fen_a'>收货地址：</text>
-        <picker class='fen_b' mode="region" @change="bindRegionChange">
+        <picker class='fen_b' mode="region" @change="bindRegionChange" style="width: 500rpx;">
           <view class="picker" style="font-size: 33rpx;">
             {{region[0]}} {{region[1]}} {{region[2]}}
           </view>
         </picker>
     </view>
 
-    <view class='fen-textarea'>
+    <view class="fen-textarea">
         <span class="address_title">详细地址：</span>
          <textarea placeholder="请输入详细地址和街道" class="address_text" @input="getAddressValue"></textarea>
     </view>
+ 
+<!--     <input type="text" style="border:1px solid #333;width: 200px;height: 30px;" v-model="userNumber"> -->
 
     <button class='ti' @click="submitSite">提交</button>
+
+
   </div>
 </template>
 
@@ -46,14 +52,17 @@ export default {
       address: '',
       orderId: '',
       crmList: '',
-      areaCode: ''
+      areaCode: '',
+      onOff: true
     }
   },
   components: {
 
   },
   created () {
-    
+    if(wx.getStorageSync('phone')){
+      this.userNumber = wx.getStorageSync('phone')
+    }
   },
   onUnload(){
     
@@ -62,26 +71,20 @@ export default {
     
   },
   onShow(){
-    this.region = ['广东省', '广州市', '天河区']
     this.orderId = this.$mp.query.orderId
-    if(wx.getStorageSync('phone')){
-      this.userNumber = wx.getStorageSync('phone')
-    }
+    this.region = ['广东省', '广州市', '天河区']
     if(wx.getStorageSync('crmList')){
-      this.crmList = wx.getStorageSync('crmList')
-      this.getCRMId('天河区')
+      this.areaCode = '4524136'
     }else{
       this.getCRMList()
     }
-    
   },
   methods: {
     bindRegionChange(e){
       console.log('e',e)
       this.region = e.mp.detail.value
       console.log('region',this.region)
-      let str = this.region[2]
-      this.getCRMId(str)
+      this.getCRMId(this.region)
     },
     getAddressValue(e){
       this.address = e.mp.detail.value
@@ -104,16 +107,54 @@ export default {
         wx.hideLoading()
         this.crmList = res.areaInfo
         wx.setStorageSync('crmList', res.areaInfo)
-        this.getCRMId('天河区')
+        this.getCRMId(this.region)
       })
     },
-    getCRMId(str){
-      for(let i = 0;i<this.crmList.length;i++){
-        if(this.crmList[i].areaName == str){
-          console.log('index',this.crmList[i]) 
-          this.areaCode = this.crmList[i].id
-        }
+    getCRMId(region){
+      let crmList = wx.getStorageSync('crmList')
+      if(this.crmList){
+        crmList = this.crmList
+      }else{
+        crmList = wx.getStorageSync('crmList')
       }
+      if(region[2] == '增城区'){
+        region[2] = '增城市'
+      }
+      let arr = crmList.filter(function(item){
+        return item.areaName == region[2]
+      })
+      console.log('arr',arr)
+      if(arr.length > 1){
+        this.areaCode = this.checkCity(crmList,arr)
+      }else{
+        this.areaCode = arr[0].id
+      }
+      console.log('areaCode',this.areaCode)
+      // for(let i = 0;i<crmList.length;i++){
+      //   if(crmList[i].areaName == region[2]){
+      //     console.log('index',crmList[i]) 
+      //     this.areaCode = crmList[i].id
+      //   }
+      // }
+    },
+    checkCity(crmList,arr){
+      let cityArr = []
+      for(let i = 0; i< arr.length; i++){
+        let cityName = crmList.filter(function(item){
+          return arr[i].parentId == item.id
+        })
+        cityArr.push(cityName)
+      }
+      const self = this
+      let cityArray = cityArr.filter(function(item){
+        return item[0].areaName == self.region[1]
+      })
+      let cityCode = cityArray[0][0].id
+      let cityIndex = arr.filter(function(item){
+        return item.parentId == cityCode
+      })
+      let arrIndex = cityIndex[0].id
+      return arrIndex
     },
     submitSite(){
       console.log('areaCode',this.areaCode)
@@ -125,6 +166,10 @@ export default {
         })
         return
       }
+      if(!this.onOff){
+        return
+      }
+      this.onOff = false
       wx.showLoading({
         title: '地址提交中',
       })
@@ -138,6 +183,7 @@ export default {
       })
       .then((res)=>{
         wx.hideLoading()
+        this.onOff = true
         if(res.code == 200){
           wx.showToast({
             title: '收货地址提交成功',
@@ -164,14 +210,23 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.container{
+  padding-top: 1px;
+}
 .fen{
-  display: flex;
-  justify-content: space-between;
+  width: 100%;
+  border-top: 1px solid #dcdcdc;
+  padding: 25rpx 0rpx;
+  background-color: #fdfdfd;
+  box-sizing: border-box;
+  position: relative;
+}
+.region{
   width: 100%;
   border-top: 1px solid #dcdcdc;
   padding: 25rpx 0;
   background-color: #fdfdfd;
-  align-items: center;
+  box-sizing: border-box;
 }
 .fen-textarea{
   width: 100%;
@@ -185,20 +240,24 @@ export default {
   height: 260rpx;
 }
 .fen_a{
-  width: 29%;
-  text-align: end;
+  width: 210rpx;
+  text-align: right;
   font-size: 35rpx;
+  display: inline-block;
+  box-sizing: border-box;
 }
 .fen_b{
-  width: 70%;
   font-size: 34rpx;
   color: #666666;
+  display: inline-block;
+  box-sizing: border-box;
 }
 .address_title{
   width: 29%;
   text-align: right;
   font-size: 35rpx;
   display: inline-block;
+  box-sizing: border-box;
 }
 .address_text{
   font-size: 34rpx;
@@ -220,6 +279,7 @@ export default {
   font-size:35rpx;
   border-radius:50rpx;
   margin-top: 50rpx;
+  box-sizing:  border-box;
 }
 .cha{
   display: inline-block;
@@ -227,6 +287,8 @@ export default {
   height:30rpx;
   margin-top:10rpx;
   margin-right:20rpx;
-
+  position: absolute;
+  right: 25rpx;
+  top: 26rpx;
 }
 </style>

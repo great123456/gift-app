@@ -4,8 +4,8 @@
     <view class='success'>
         <image src='/static/image/ling_cgong.png' class='cheng'></image>
         <view class='success_a'>成功领取！</view>
-        <view class='success_b'>立乐礼包劵已通过公众号给您</view>
-        <view class='success_b'>若未关注公众号请按一下指引操作</view>
+        <view class='success_b'>恭喜您成功领取"Fun享礼",请点击前往使用</view>
+        <!-- <view class='success_b'>若未关注公众号请按一下指引操作</view> -->
       </view>
 
       <view class='btn'>
@@ -67,8 +67,11 @@ export default {
           url: '/pages/receive-t/main?orderId='+this.orderId
         })
       }else{
+        // wx.navigateTo({
+        //   url: '/pages/attention/main'
+        // })
         wx.navigateTo({
-          url: '/pages/attention/main'
+          url: '/pages/receive-t/main?orderId='+this.orderId
         })
       }
     }

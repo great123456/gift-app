@@ -34,6 +34,8 @@
         <image src='/static/image/xqy_xqing_icon.png' class='ka'></image>
         详情
     </view>
+    <div class="description" v-show="detailObj.description">{{detailObj.description}}</div>
+
     <view class='xq' v-for="(item,index) in detailsList" :key="index">
         <image :src="item" mode="widthFix"></image>
     </view>
@@ -82,6 +84,9 @@
       <div class="price">￥{{detailObj.linePrice}}</div>
       <button open-type="share" class="detail-btn">送好友</button>
     </div> -->
+
+    <button open-type="getUserInfo" @getuserinfo="bindGetUserInfo" class="user-btn" v-show="showInfoBtn"></button>
+
   </div>
 </template>
 
@@ -108,6 +113,7 @@ export default {
       showTextArea: true,
       iv: '',
       encryptedData: '',
+      showInfoBtn:false,
       showPhoneBtn: false,
       orderId: '',
       coverList: [],
@@ -137,9 +143,30 @@ export default {
     })
     this.showModal = false
     this.showTextArea = true
+    const self = this
+    if(!wx.getStorageSync('userInfo')){
+      wx.authorize({
+        scope: 'scope.userInfo',
+        success() {
+          wx.getUserInfo({
+             success: function(res) {
+               console.log('userinfo',res.userInfo)
+               wx.setStorageSync('userInfo', res.userInfo)
+               self.showInfoBtn = false
+             }
+          })
+        }
+      })
+    }
+    if(!wx.getStorageSync('userInfo')){
+      this.showInfoBtn = true
+    }
     wx.removeStorageSync('record')
     if(!wx.getStorageSync('phone')){
       this.showPhoneBtn = true
+    }
+    if(!wx.getStorageSync('login')){
+      this.userLogin()
     }
     this.giftId = this.$mp.query.id
     this.getGiftDetail()
@@ -199,6 +226,23 @@ export default {
         }
       })
     },
+    userLogin(){
+      wx.login({
+          success: (res) => {
+            console.log('detail-code',res)
+            apiUserCodeLogin({
+              code: res.code
+            })
+            .then((res)=>{
+               console.log('login',res)
+               wx.setStorageSync('login', true)
+               wx.setStorageSync('openid', res.openid)
+               wx.setStorageSync('session_key', res.session_key)
+               wx.setStorageSync('unionid', res.unionid)
+            })
+          }
+      })
+    },
     bindInputChange(e){
       if(e.mp.detail.value.length>=35){
         wx.showToast({
@@ -218,10 +262,17 @@ export default {
         }
       return temp
     },
+    bindGetUserInfo(e){
+      wx.setStorageSync('userInfo', e.mp.detail.userInfo)
+      this.showInfoBtn = false
+    },
     getPhoneNumber(e){
       console.log(e)
       this.iv = e.mp.detail.iv
       this.encryptedData = e.mp.detail.encryptedData
+      if(!wx.getStorageSync('login')){
+        this.userLogin()
+      }
       this.getUserPhoneNumber()
     },
     getUserPhoneNumber(){
@@ -402,6 +453,14 @@ export default {
 }
 .heads-mark{
   justify-content: flex-start;
+}
+.description{
+  margin-top: 30rpx;
+  padding: 0rpx 50rpx;
+  font-size: 26rpx;
+  line-height: 40rpx;
+  color: #666666;
+  margin-bottom: 30rpx;
 }
 .active {
   background: -webkit-linear-gradient(right top,#fda929, #fe6951);
@@ -726,5 +785,15 @@ export default {
     font-size: 30rpx;
     line-height: 35rpx;
   }
+}
+.user-btn{
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  left: 0px;
+  top: 0px;
+  box-sizing: border-box;
+  z-index: 9999;
+  opacity: 0;
 }
 </style>

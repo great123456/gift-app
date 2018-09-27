@@ -89,6 +89,9 @@ export default {
         }
       })
     }
+    if(!wx.getStorageSync('login')){
+       this.getUserLogin()
+    }
     this.judgeUserStatus()
     console.log('query',this.$mp.query)
     if(this.$mp.query.orderId){
@@ -115,6 +118,23 @@ export default {
         this.showPhoneNumber = false
         this.showReceiveBtn = true
       }
+    },
+    getUserLogin () {
+      // 调用登录接口
+      wx.login({
+        success: (res) => {
+          apiUserCodeLogin({
+            code: res.code
+          })
+          .then((res)=>{
+             console.log('ling-login',res)
+             wx.setStorageSync('login', true)
+             wx.setStorageSync('openid', res.openid)
+             wx.setStorageSync('session_key', res.session_key)
+             wx.setStorageSync('unionid', res.unionid)
+          })
+        }
+      })
     },
     submitInfo(e) {
       console.log('formId',e.mp.detail.formId)
@@ -143,10 +163,16 @@ export default {
     bindGetUserInfo(e){
       wx.setStorageSync('userInfo', e.mp.detail.userInfo)
       this.judgeUserStatus()
+      if(!wx.getStorageSync('login')){
+         this.getUserLogin()
+      }
     },
     getPhoneNumber(e){
       this.iv = e.mp.detail.iv
       this.encryptedData = e.mp.detail.encryptedData
+      if(!wx.getStorageSync('login')){
+         this.getUserLogin()
+      }
       this.getUserPhoneNumber()
     },
     getUserPhoneNumber(){

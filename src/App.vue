@@ -12,6 +12,7 @@ export default {
           })
           .then((res)=>{
              console.log('login',res)
+             wx.setStorageSync('login', true)
              wx.setStorageSync('openid', res.openid)
              wx.setStorageSync('session_key', res.session_key)
              wx.setStorageSync('unionid', res.unionid)
@@ -24,7 +25,7 @@ export default {
       console.log('share',res)
       if(res.code == 200){
         console.log('share-aaa')
-        let coverImg = API_PATH + '/lilejia/upload/cover/' + res.res.cover
+        let coverImg = API_PATH + '/lilejia/upload/cover/' + encodeURIComponent(res.res.cover)
         let title = res.res.title
         wx.setStorageSync('shareImg',coverImg)
         wx.setStorageSync('shareTitle',title)

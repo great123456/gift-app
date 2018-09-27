@@ -10,7 +10,7 @@
       <view v-show="activeIndex == 1">
 
           <block v-for="(item,index) in lister" :key="index">
-          <view class="list" @click="detailPage(item.cardId)">
+          <view class="list" @click="detailPage(item)">
             <view class="list_imgbk2">
                 <image :src="item.giftsCoverImg" class='li_tu'></image>
                 <view class='list_biao'>
@@ -172,15 +172,18 @@ export default {
         })
         return
       }
-      if(this.code == '-10113'){
-        wx.navigateTo({
-          url: '/pages/receive-t/main?orderId='+item.orderId
-        })
-      }else{
-        wx.navigateTo({
-          url: '/pages/attention/main'
-        })
-      }
+      wx.navigateTo({
+        url: '/pages/receive-t/main?orderId='+item.orderId
+      })
+      // if(this.code == '-10113'){
+      //   wx.navigateTo({
+      //     url: '/pages/receive-t/main?orderId='+item.orderId
+      //   })
+      // }else{
+      //   wx.navigateTo({
+      //     url: '/pages/attention/main'
+      //   })
+      // }
     },
     checkUserCode(){
       apiCheckCode({
@@ -205,9 +208,9 @@ export default {
         // })
       }
     },
-    detailPage(id){
+    detailPage(item){
       wx.navigateTo({
-        url: '/pages/details/main?id='+id
+        url: '/pages/record-detail/main?id='+item.cardId+'&orderId='+item.orderId
       })
     },
     getGiftList(num){
