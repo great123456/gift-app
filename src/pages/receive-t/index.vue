@@ -17,9 +17,14 @@
 
     <view class='region'>
         <text class='fen_a'>收货地址：</text>
-        <picker class='fen_b' mode="region" @change="bindRegionChange" style="width: 500rpx;">
+        <!-- <picker class='fen_b' mode="region" @change="bindRegionChange" style="width: 500rpx;">
           <view class="picker" style="font-size: 33rpx;">
             {{region[0]}} {{region[1]}} {{region[2]}}
+          </view>
+        </picker> -->
+        <picker class='fen_b' mode="multiSelector" @change="bindMultiPickerChange" @columnchange="bindMultiPickerColumnChange" range-key="areaName" :value="multiIndex" :range="objectMultiArray" style="width: 500rpx;">
+          <view class="picker" style="font-size: 33rpx;">
+           {{region[0]}} {{region[1]}} {{region[2]}}
           </view>
         </picker>
     </view>
@@ -33,6 +38,14 @@
 
     <button class='ti' @click="submitSite">提交</button>
 
+    
+    <!-- <view class="section">
+      <picker mode="multiSelector" @change="bindMultiPickerChange" @columnchange="bindMultiPickerColumnChange" range-key="areaName" :value="multiIndex" :range="objectMultiArray">
+        <view class="picker">
+          当前选择:{{region[0]}} {{region[1]}} {{region[2]}}
+        </view>
+      </picker>
+    </view> -->
 
   </div>
 </template>
@@ -44,7 +57,7 @@ export default {
   mixins: [wxShare],
   data () {
     return {
-      region: ['广东省', '广州市', '天河区'],
+      region: [],
       regionValue: '广东省 广州市 天河区',
       customItem: '全部',
       userName: '',
@@ -53,7 +66,10 @@ export default {
       orderId: '',
       crmList: '',
       areaCode: '',
-      onOff: true
+      onOff: true,
+      pickerList: [],
+      objectMultiArray: [],
+      multiIndex: [0, 0, 0]
     }
   },
   components: {
@@ -62,6 +78,11 @@ export default {
   created () {
     if(wx.getStorageSync('phone')){
       this.userNumber = wx.getStorageSync('phone')
+    }
+    if(wx.getStorageSync('crmList')){
+      this.getPickerList()
+    }else{
+      this.getCRMList()
     }
   },
   onUnload(){
@@ -72,19 +93,77 @@ export default {
   },
   onShow(){
     this.orderId = this.$mp.query.orderId
-    this.region = ['广东省', '广州市', '天河区']
-    if(wx.getStorageSync('crmList')){
-      this.areaCode = '4524136'
-    }else{
-      this.getCRMList()
-    }
   },
   methods: {
+    bindMultiPickerChange(e){
+      let multiIndex = e.mp.detail.value
+      this.areaCode = this.objectMultiArray[2][multiIndex[2]].id
+      this.region = []
+      this.region.push(this.objectMultiArray[0][multiIndex[0]].areaName)
+      this.region.push(this.objectMultiArray[1][multiIndex[1]].areaName)
+      this.region.push(this.objectMultiArray[2][multiIndex[2]].areaName)
+      console.log('areaCode',this.areaCode)
+      console.log('region',this.region)
+    },
+    bindMultiPickerColumnChange(e) {
+      console.log('e',e)
+      let row = e.mp.detail.column
+      let column = e.mp.detail.value
+      if(row == 0){
+        let columnId = this.objectMultiArray[row][column].id
+        let columnList = this.getColumnList(columnId)
+        let objectMultiArray = []
+        objectMultiArray.push(this.pickerList)
+        objectMultiArray.push(columnList)
+        let optionList = this.getColumnList(columnList[0].id)
+        objectMultiArray.push(optionList)
+        this.objectMultiArray = objectMultiArray
+        this.multiIndex = [column,0,0]
+      }
+      if(row == 1){
+        let columnId = this.objectMultiArray[row][column].id
+        let optionList = this.getColumnList(columnId)
+        let objectMultiArray = []
+        objectMultiArray.push(this.objectMultiArray[0])
+        objectMultiArray.push(this.objectMultiArray[1])
+        objectMultiArray.push(optionList)
+        this.objectMultiArray = objectMultiArray
+        let multiIndex = [...this.multiIndex]
+        this.multiIndex = [multiIndex[0],column,0]
+      }
+    },
     bindRegionChange(e){
       console.log('e',e)
       this.region = e.mp.detail.value
       console.log('region',this.region)
       this.getCRMId(this.region)
+    },
+    getPickerList(){
+      let crmList = wx.getStorageSync('crmList')
+      let pickerList = crmList.filter(function(item){
+        return item.level == 0
+      })
+      this.pickerList = pickerList
+      this.objectMultiArray = []
+      this.objectMultiArray.push(pickerList)
+      let columnList = this.getColumnList(pickerList[0].id)
+      this.objectMultiArray.push(columnList)
+      let optionList = this.getColumnList(columnList[0].id)
+      this.objectMultiArray.push(optionList)
+      this.areaCode = this.objectMultiArray[2][this.multiIndex[2]].id
+      this.region = []
+      this.region.push(this.objectMultiArray[0][this.multiIndex[0]].areaName)
+      this.region.push(this.objectMultiArray[1][this.multiIndex[1]].areaName)
+      this.region.push(this.objectMultiArray[2][this.multiIndex[2]].areaName)
+      console.log('areaCode',this.areaCode)
+    },
+    getColumnList(id){
+      let crmList = wx.getStorageSync('crmList')
+      let columnList = crmList.filter(function(item){
+        return (item.parentId == id && item.id != item.parentId)
+      })
+      return columnList
+      console.log('columnList',columnList)
     },
     getAddressValue(e){
       this.address = e.mp.detail.value
@@ -107,7 +186,7 @@ export default {
         wx.hideLoading()
         this.crmList = res.areaInfo
         wx.setStorageSync('crmList', res.areaInfo)
-        this.getCRMId(this.region)
+        this.getPickerList()
       })
     },
     getCRMId(region){
